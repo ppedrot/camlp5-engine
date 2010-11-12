@@ -11,7 +11,7 @@ type ('a, 'b) choice =
   | Right of 'b
 ;;
 
-let sys_ocaml_version = Sys.ocaml_version;;
+let sys_ocaml_version = "3.13.0-gadt";;
 
 let ocaml_location (fname, lnum, bolp, bp, ep) =
   let loc_at n =
@@ -23,6 +23,7 @@ let ocaml_location (fname, lnum, bolp, bp, ep) =
 ;;
 
 let ocaml_type_declaration params cl tk pf tm loc variance =
+  let params = List.map (fun s -> if s = "" then None else Some s) params in
   Some
     {ptype_params = params; ptype_cstrs = cl; ptype_kind = tk;
      ptype_private = pf; ptype_manifest = tm; ptype_loc = loc;
@@ -39,17 +40,7 @@ let ocaml_ptype_abstract = Ptype_abstract;;
 
 let ocaml_ptype_record ltl priv = Ptype_record ltl;;
 
-let ocaml_ptype_variant ctl priv =
-  try
-    let ctl =
-      List.map
-        (fun (c, tl, rto, loc) ->
-           if rto <> None then raise Exit else c, tl, loc)
-        ctl
-    in
-    Some (Ptype_variant ctl)
-  with Exit -> None
-;;
+let ocaml_ptype_variant ctl priv = Some (Ptype_variant ctl);;
 
 let ocaml_ptyp_arrow lab t1 t2 = Ptyp_arrow (lab, t1, t2);;
 
@@ -117,18 +108,18 @@ let ocaml_pexp_variant =
 let ocaml_ppat_array = Some (fun pl -> Ppat_array pl);;
 
 let ocaml_ppat_construct li po chk_arity =
-  Ppat_construct (li, po, chk_arity)
+  Ppat_construct (li, po, chk_arity, None)
 ;;
 
 let ocaml_ppat_construct_args =
   function
-    Ppat_construct (li, po, chk_arity) -> Some (li, po, chk_arity)
+    Ppat_construct (li, po, chk_arity, _) -> Some (li, po, chk_arity)
   | _ -> None
 ;;
 
 let ocaml_ppat_lazy = Some (fun p -> Ppat_lazy p);;
 
-let ocaml_ppat_record lpl = Ppat_record (lpl, Closed);;
+let ocaml_ppat_record lpl = Ppat_record (lpl, Closed, None);;
 
 let ocaml_ppat_type = Some (fun sl -> Ppat_type sl);;
 
